@@ -5,8 +5,9 @@
 **An AI job-search assistant that does the searching, screening and writing, and leaves the decisions to you.**
 
 Every morning it pulls new Melbourne tech jobs, has Claude score each one against your profile, and sends the best
-matches to Telegram. Tap **Approve** and it drafts a tailored cover letter and tells you which projects to lead your
-CV with. You apply on the employer's site and tap **Applied**. A week later it asks how it went and keeps the
+matches to Telegram. Tap **Approve** and it sends a one-tap application kit: a CV PDF and a cover-letter PDF
+tailored to that job, plus paste-ready answers to the usual screening questions. You apply on the employer's site
+and tap **Applied**. A week later it asks how it went and keeps the
 whole pipeline in one place.
 
 ```
@@ -14,7 +15,7 @@ melbourne-tech-jobs ──► /feed/jobs ──► prefilter ──► Claude: s
    (daily Adzuna collection)            (rules)        │
                                                        ▼
                        Telegram ◄── digest of top matches (score ≥ 70)
-                          │  ✅ Approve        ──► Claude: cover letter + CV highlights
+                          │  ✅ Approve        ──► Claude: letter + CV emphasis ──► CV & letter PDFs + answers
                           │  📋 Full advert    ──► rewrite using the pasted advert
                           │  📨 Applied        ──► follow-up reminder in 7 days
                           └  🎉/❌/🔇 Outcome   ──► pipeline stats (/stats)
@@ -41,6 +42,7 @@ click stay with you, which takes about 5 minutes a day.
 | **Score** | Claude scores jobs in batches against your profile: 0–100, a verdict, reasons, gaps and red flags such as citizenship requirements. Structured output is validated with Pydantic. Several adverts share one request, and the rules and profile form a stable prefix marked for prompt caching, which takes effect once the profile is long enough to cache. |
 | **Digest** | The top matches above `MIN_SCORE` go to Telegram as cards with inline buttons. Only your chat id can use the bot. |
 | **Draft** | On approval, Claude writes a 180–260 word cover letter grounded strictly in your profile. It lists anything it couldn't verify under "check before sending", rather than inventing experience. |
+| **Kit** | The CV PDF is built from `profile.yaml` with ReportLab. Claude only chooses emphasis: the summary, which skills lead and which projects come first. Skill and project names it returns that aren't in your profile are dropped, so nothing invented reaches an employer. The kit also includes a cover-letter PDF and paste-ready screening answers. |
 | **Track** | SQLite records each job's status (`sent → approved → applied → interview / rejected / no_reply`), with follow-ups and token usage. `/stats` shows the pipeline and the month's Claude cost. |
 
 **Reliability:**
@@ -76,6 +78,7 @@ pip install '.[test]' && pytest
 
 The tests use fake Claude and Telegram clients, so they make no network calls and cost nothing. They cover:
 - the full approve → draft → applied → follow-up → outcome flow
+- PDFs that contain only profile facts, with invented skills and projects dropped, checked with pypdf
 - rewriting a letter from a pasted advert, and skipping
 - ignoring every chat except yours, and the first-run setup mode
 - rate-limit handling, HTML escaping, feed paging and resuming, and prefilter rules

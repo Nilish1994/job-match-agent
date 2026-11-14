@@ -76,10 +76,14 @@ def test_approve_drafts_letter_then_applied_then_follow_up(seeded):
     job_id = jobs[0]["id"]
     agent.handle(callback(f"approve:{job_id}"))
     assert agent.store.match(job_id)["status"] == "approved"
-    letter = agent.tg.sent[-1]
-    assert "Draft 1" in letter["text"] and "Dear team" in letter["text"] and "Start date" in letter["text"]
+    letter, kit = agent.tg.sent[-2], agent.tg.sent[-1]
+    assert "Application kit 1" in letter["text"] and "Dear team" in letter["text"] and "Start date" in letter["text"]
+    names = [d["filename"] for d in agent.tg.documents]
+    assert names == ["Alex_Example_Company_1_CV.pdf", "Alex_Example_Company_1_Cover_Letter.pdf"]
+    assert all(d["content"].startswith(b"%PDF") for d in agent.tg.documents)
+    assert "Why this role" in kit["text"] and "Your API platform" in kit["text"] and "Work rights" in kit["text"]
     assert f"applied:{job_id}" in agent.tg.callbacks()
-    assert any(b.get("url") == jobs[0]["source_url"] for row in letter["buttons"] for b in row)
+    assert any(b.get("url") == jobs[0]["source_url"] for row in kit["buttons"] for b in row)
 
     agent.handle(callback(f"applied:{job_id}"))
     match = agent.store.match(job_id)
@@ -101,7 +105,8 @@ def test_full_advert_rewrite(seeded):
     agent.handle(callback(f"fullad:{job_id}"))
     agent.handle(message("Full advert: we want LangChain and AWS."))
     assert "Full advert: we want LangChain and AWS." in agent.matcher.client.calls[-1]["messages"][0]["content"]
-    assert "Draft 2" in agent.tg.sent[-1]["text"]
+    assert any("Application kit 2" in m["text"] for m in agent.tg.sent[-3:])
+    assert len(agent.tg.documents) == 4
 
 
 def test_skip(seeded):

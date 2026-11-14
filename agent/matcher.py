@@ -37,6 +37,10 @@ class CoverLetter(BaseModel):
     highlights: list[str] = Field(description="2-4 achievements or projects to put first on the CV for this job")
     cv_tweaks: list[str] = Field(description="Up to 3 concrete wording changes to the CV for this job")
     check_before_sending: list[str] = Field(description="Facts the letter assumes that the candidate should confirm")
+    cv_summary: str = Field(description="2-3 sentence CV summary tailored to this job, using only profile facts")
+    lead_skills: list[str] = Field(description="Up to 12 skills from the profile's Skills list, most relevant first")
+    featured_projects: list[str] = Field(description="2-4 project names from the profile, most relevant first")
+    why_this_role: str = Field(description="2-3 sentence answer to 'Why do you want this role?' in first person")
 
 
 SCORING_RULES = """You screen job adverts for one candidate, whose profile is below. Score each job 0-100 for how
@@ -62,7 +66,13 @@ LETTER_RULES = """You write a cover letter for the candidate below, for one spec
   naming real projects and links where relevant. Close with availability and work rights.
 - Never claim experience, employers or skills that aren't in the profile. If the advert asks for something
   the candidate lacks, don't mention it; list it in check_before_sending instead.
-- Sign off with the candidate's name."""
+- Sign off with the candidate's name.
+
+Also tailor the CV. The CV is generated from the profile, and you only choose emphasis:
+- cv_summary: 2-3 sentences, first person implied (no "I"), only facts from the profile.
+- lead_skills: copy names exactly from the profile's Skills list, most relevant to this advert first.
+- featured_projects: copy names exactly from the profile's Projects list, most relevant first.
+- why_this_role: a short, specific, first-person answer for an application form."""
 
 
 class Matcher:

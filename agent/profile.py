@@ -30,6 +30,8 @@ class Profile:
     projects: list[dict]
     preferences: Preferences
     contact: dict = field(default_factory=dict)
+    # Standard answers for application forms: work_rights, notice, salary_expectation, location, ...
+    screening: dict = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str | Path) -> "Profile":
@@ -43,6 +45,7 @@ class Profile:
             skills=data.get("skills", []), projects=data.get("projects", []),
             preferences=Preferences(**(data.get("preferences") or {})),
             contact=data.get("contact") or {},
+            screening=data.get("screening") or {},
         )
 
     def render(self) -> str:

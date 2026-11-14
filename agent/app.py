@@ -9,7 +9,7 @@ import logging
 import anthropic
 import httpx
 
-from agent import feed, prefilter
+from agent import documents, feed, prefilter
 from agent.config import Settings
 from agent.matcher import Matcher, Refused
 from agent.store import Store, now
@@ -157,17 +157,36 @@ class Agent:
             self.tg.send(self.chat, "Claude is unavailable right now. Tap <b>Rewrite</b> to try again.",
                          [[button("🔁 Rewrite", f"redo:{job_id}")]])
             return
-        notes = {"highlights": result.highlights, "cv_tweaks": result.cv_tweaks, "check": result.check_before_sending}
+        notes = {"highlights": result.highlights, "cv_tweaks": result.cv_tweaks, "check": result.check_before_sending,
+                 "cv_summary": result.cv_summary, "lead_skills": result.lead_skills,
+                 "featured_projects": result.featured_projects, "why_this_role": result.why_this_role}
         version = self.store.save_letter(job_id, result.cover_letter, notes)
-        text = [f"✍️ <b>Draft {version}: {esc(job['title'])}</b> at {esc(job.get('company') or '')}", "",
+        text = [f"✍️ <b>Application kit {version}: {esc(job['title'])}</b> at {esc(job.get('company') or '')}", "",
                 f"<pre>{esc(result.cover_letter)}</pre>"]
-        if result.highlights:
-            text += ["", "<b>Lead your CV with</b>"] + [f"• {esc(h)}" for h in result.highlights]
-        if result.cv_tweaks:
-            text += ["", "<b>CV tweaks</b>"] + [f"• {esc(t)}" for t in result.cv_tweaks]
         if result.check_before_sending:
             text += ["", "<b>Check before sending</b>"] + [f"• {esc(c)}" for c in result.check_before_sending]
-        self.tg.send(self.chat, "\n".join(text), self.letter_buttons(job))
+        self.tg.send(self.chat, "\n".join(text))
+        self.send_kit(job, result)
+
+    def send_kit(self, job: dict, result) -> None:
+        """Tailored CV + letter PDFs and paste-ready answers, ending with the action buttons."""
+        profile = self.matcher.profile
+        stem = documents.file_stem(profile, job)
+        try:
+            self.tg.send_document(self.chat, f"{stem}_CV.pdf", documents.cv_pdf(profile, result),
+                                  caption="📄 CV tailored for this role")
+            self.tg.send_document(self.chat, f"{stem}_Cover_Letter.pdf", documents.letter_pdf(profile, result, job),
+                                  caption="📄 Cover letter")
+        except TelegramError as exc:
+            log.error("sending documents failed: %s", exc)
+            self.tg.send(self.chat, "⚠️ I couldn't send the PDFs. The letter text above still works.")
+        lines = ["📋 <b>Paste-ready answers</b> (tap a block to copy)"]
+        for question, answer in documents.screening_text(profile, result):
+            lines += ["", f"<b>{esc(question)}</b>", f"<code>{esc(answer)}</code>"]
+        if not profile.contact.get("email") or not profile.contact.get("phone"):
+            lines += ["", "ℹ️ Add your email and phone to profile.yaml so they appear on the CV."]
+        lines += ["", "Open the advert, apply with the PDFs, then tap <b>Applied</b>."]
+        self.tg.send(self.chat, "\n".join(lines), self.letter_buttons(job))
 
     # ---------------------------------------------------------------- updates
     def handle(self, update: dict) -> None:

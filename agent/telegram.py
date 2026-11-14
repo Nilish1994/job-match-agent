@@ -52,6 +52,11 @@ class Telegram:
     def answer(self, callback_id: str, text: str = "") -> None:
         self._call("answerCallbackQuery", callback_query_id=callback_id, text=text[:200])
 
+    def send_document(self, chat_id: str, filename: str, content: bytes, caption: str = "",
+                      mime: str = "application/pdf") -> None:
+        self._call("sendDocument", http_timeout=60, files={"document": (filename, content, mime)},
+                   chat_id=chat_id, caption=caption[:1024])
+
 
 
 def button(text: str, data: str | None = None, url: str | None = None) -> dict:

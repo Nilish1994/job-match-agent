@@ -6,6 +6,8 @@ summary: >
   AI projects. Enjoys practical, user-focused engineering.
 contact:
   email: alex@example.com
+  phone: "0400 000 000"
+  location: Melbourne, VIC
   github: https://github.com/example
   linkedin: https://www.linkedin.com/in/example
 experience:
@@ -33,3 +35,9 @@ preferences:
   # Adverts containing any of these phrases are never scored (useful for visa holders).
   avoid_description_phrases: [security clearance, baseline clearance, NV1]
   notes: Prefers product companies; open to contract roles.
+# Standard answers sent with each approved application, ready to paste into forms. Shown in this order.
+screening:
+  Work rights: Full working rights in Australia; no sponsorship required.
+  Notice period: 2 weeks
+  Salary expectation: $110,000-$125,000 + super, depending on the role
+  Location: Melbourne; open to hybrid or on-site, or remote within Australia

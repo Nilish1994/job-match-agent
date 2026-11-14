@@ -33,7 +33,7 @@ def make_job(n, *, title="Python Developer", skills=("Python", "FastAPI"), days_
 
 class FakeTelegram:
     def __init__(self):
-        self.sent, self.answers, self.cleared = [], [], []
+        self.sent, self.answers, self.cleared, self.documents = [], [], [], []
 
     def send(self, chat_id, text, buttons=None):
         self.sent.append({"chat_id": chat_id, "text": text, "buttons": buttons or []})
@@ -41,6 +41,9 @@ class FakeTelegram:
 
     def answer(self, callback_id, text=""):
         self.answers.append(text)
+
+    def send_document(self, chat_id, filename, content, caption="", mime="application/pdf"):
+        self.documents.append({"filename": filename, "content": content, "caption": caption})
 
     def edit_buttons(self, chat_id, message_id, buttons):
         self.cleared.append(message_id)
@@ -60,8 +63,12 @@ class FakeClaude:
         self.scorer = scorer or (lambda job_ids: [JobScore(job_id=j, score=80, verdict="possible",
                                                            reasons=["Python match"], gaps=[], red_flags=[])
                                                   for j in job_ids])
-        self.letter = letter or (lambda: CoverLetter(cover_letter="Dear team, ...", highlights=["Project A"],
-                                                     cv_tweaks=[], check_before_sending=["Start date"]))
+        self.letter = letter or (lambda: CoverLetter(
+            cover_letter="Dear team,\n\nI'd love to join you.\n\nAlex Example", highlights=["Project A"],
+            cv_tweaks=[], check_before_sending=["Start date"],
+            cv_summary="Full-stack engineer with React and FastAPI experience.",
+            lead_skills=["FastAPI", "Kubernetes", "python"], featured_projects=["example-dashboard", "Made Up"],
+            why_this_role="Your API platform matches the services I build."))
         self.beta = SimpleNamespace(messages=SimpleNamespace(parse=self.parse))
 
     def parse(self, **kwargs):
