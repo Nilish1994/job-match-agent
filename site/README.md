@@ -51,6 +51,12 @@ It uses headless Google Chrome (set `CHROME=/path/to/chrome` if it isn't at the 
 deploying, re-scrape the URL in a link-preview debugger such as LinkedIn's Post Inspector, because platforms cache
 previews.
 
+## GitHub Pages (live now)
+
+`.github/workflows/pages.yml` publishes the page and `assets/` to <https://nilish1994.github.io/job-match-agent/>
+on every push to `main` that touches `site/`. It rewrites the custom domain in the link-preview tags to the Pages
+address so previews work there. `tools/` and this README aren't published.
+
 ## Serving with nginx
 
 Copy `site/` to the server (for example `/srv/jobpilot/site`), then add a server block. certbot adds the

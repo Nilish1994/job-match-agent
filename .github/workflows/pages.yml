@@ -1,0 +1,45 @@
+name: pages
+
+# Publishes site/ (the JobPilot landing page) to GitHub Pages.
+# SITE_URL replaces the custom domain in the og:url / og:image tags so link previews work on the Pages address.
+# When jobpilot.imisstech.com.au is live, set SITE_URL to it (or stop using this workflow).
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  SITE_URL: https://nilish1994.github.io/job-match-agent
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build _site (page and assets only)
+        run: |
+          mkdir _site
+          cp site/index.html site/privacy.html _site/
+          cp -r site/assets _site/
+          sed -i "s#https://jobpilot.imisstech.com.au#${SITE_URL}#g" _site/*.html
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
