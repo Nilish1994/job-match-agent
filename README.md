@@ -47,7 +47,7 @@ melbourne-tech-jobs ──► /feed/jobs ──► shared jobs table
 
 | Part | Detail |
 |---|---|
-| **Onboarding** | An invite link (or an invite request the owner approves in Telegram) leads to a privacy notice and consent. The user uploads a CV PDF; text is extracted with pypdf and Claude turns it into a structured profile. A few taps set target roles, location, salary floor and work rights. Scanned or oversized PDFs get clear replies. |
+| **Onboarding** | A personal, single-use invite link from the owner (`/invite`) leads to a privacy notice and consent. The bot has no "request an invite" button: strangers are told it is invite-only and pointed to jobpilot.imisstech.com.au. The user uploads a CV PDF; text is extracted with pypdf and Claude turns it into a structured profile. A few taps set target roles, location, salary floor and work rights. Scanned or oversized PDFs get clear replies. |
 | **Multi-user isolation** | Shared job data lives in one table. Everything personal goes through a `UserStore` scoped to one user, so one user's Telegram buttons can't read or change another's matches. Tests check this. |
 | **Scoring** | A rules prefilter skips jobs that clearly don't fit. Claude then scores the rest in batches against the profile: 0–100, a verdict, reasons, gaps and red flags. Results are validated with Pydantic, and server-side refusal fallback is on. |
 | **Application kit** | A tailored CV and cover letter rendered with ReportLab, plus screening answers built from the user's own preferences. |
@@ -58,7 +58,7 @@ melbourne-tech-jobs ──► /feed/jobs ──► shared jobs table
 
 | User | Owner (`OWNER_CHAT_ID`) |
 |---|---|
-| `/profile` `/cv` `/prefs` `/pause` `/resume` `/deleteme` `/run` `/pending` `/stats` `/help` | `/invite [note]` creates a single-use invite link · `/users` shows activity and cost per user · `/requests` lists invite requests to approve or decline |
+| `/profile` `/cv` `/prefs` `/pause` `/resume` `/deleteme` `/run` `/pending` `/stats` `/help` | `/invite [note]` creates a single-use invite link · `/users` shows activity and cost per user · `/requests` lists invite requests made before requests closed, to approve or decline |
 
 ## Run it
 
@@ -84,8 +84,8 @@ Then send `/invite` to your bot and share the link. Matching runs at `DAILY_HOUR
 pip install '.[test]' && pytest
 ```
 
-45 tests run with fake Claude and Telegram clients, so they make no network calls and cost nothing. They cover:
-- **Lifecycle:** invite request and approval, single-use invites, consent, CV upload (including scanned and oversized
+46 tests run with fake Claude and Telegram clients, so they make no network calls and cost nothing. They cover:
+- **Lifecycle:** strangers get no request button, earlier requests can still be approved, single-use invites, consent, CV upload (including scanned and oversized
   files), preferences, activation and first matches
 - **Data:** encryption at rest, `/deleteme` removing every row, and the v1 to v2 migration keeping the owner's data
 - **Isolation:** cross-user button presses

@@ -70,18 +70,31 @@ def test_setup_mode_replies_with_chat_id(bot):
     assert "123" in bot.tg.to("123")[-1]["text"]
 
 
-def test_strangers_can_request_and_owner_approves(bot):
-    bot.handle(msg("100", "/start"))
-    assert "invite-only" in bot.tg.to("100")[-1]["text"]
-    bot.handle(btn("100", "req:new"))
+def test_strangers_get_no_request_button(bot):
+    for text in ("/start", "/start request", "hello"):
+        bot.handle(msg("100", text))
+        reply = bot.tg.to("100")[-1]
+        assert "invite-only" in reply["text"] and "jobpilot.imisstech.com.au" in reply["text"]
+        assert reply["buttons"] == []
+    bot.handle(msg("100", "/start not-a-real-code"))
+    reply = bot.tg.to("100")[-1]
+    assert "isn't valid" in reply["text"] and reply["buttons"] == []
+    bot.handle(btn("100", "req:new"))                 # a button left in an older chat stores nothing
+    assert bot.store.pending_requests() == []
+    assert not any("Invite request" in m["text"] for m in bot.tg.to(OWNER))
+    assert "personal" in bot.tg.answers[-1]
+
+
+def test_owner_can_still_answer_earlier_requests(bot):
+    bot.store.request_invite("100", "Sam")            # made before requests were closed
+    bot.handle(msg(OWNER, "/requests"))
     assert "adm:ok:100" in [b["callback_data"] for row in bot.tg.to(OWNER)[-1]["buttons"] for b in row]
-    bot.handle(btn("100", "req:new"))                # duplicate request is not re-sent
-    assert len([m for m in bot.tg.to(OWNER) if "Invite request" in m["text"]]) == 1
     bot.handle(btn("999", "adm:ok:100"))              # only the owner can approve
     assert not any("You're invited" in m["text"] for m in bot.tg.to("100"))
     bot.handle(btn(OWNER, "adm:ok:100"))
     invite = bot.tg.to("100")[-1]
     assert "You're invited" in invite["text"] and invite["buttons"][0][0]["url"].startswith("https://t.me/test_bot?start=")
+    assert bot.store.pending_requests() == []
 
 
 def test_invite_link_is_single_use(bot):
