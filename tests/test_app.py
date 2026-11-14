@@ -158,3 +158,50 @@ def test_card_escapes_html(agent, store):
                        "location": None, "salary_min": None, "salary_max": None, "reasons": ["<b>"], "gaps": [],
                        "red_flags": []})
     assert "&lt;script&gt;" in card and "A &amp; B" in card and "&lt;b&gt;" in card
+
+
+def weekly(agent, weekday=6, hour=7):
+    agent.settings = type(agent.settings)(**{**agent.settings.__dict__, "run_weekday": weekday, "daily_hour": hour})
+    return agent
+
+
+SUN_0730 = datetime(2026, 11, 14, 20, 30, tzinfo=timezone.utc)   # Sunday 15 Nov, 7:30am Melbourne
+SUN_0630 = datetime(2026, 11, 14, 19, 30, tzinfo=timezone.utc)   # Sunday, 6:30am
+MON_0730 = datetime(2026, 11, 15, 20, 30, tzinfo=timezone.utc)   # Monday, 7:30am
+
+
+def test_weekly_schedule_runs_only_on_sunday_from_7am(agent):
+    weekly(agent)
+    assert not agent.daily_due(at=SUN_0630)
+    assert agent.daily_due(at=SUN_0730)
+    assert not agent.daily_due(at=MON_0730)
+    with patch.object(feed, "sync", side_effect=lambda store, url, http: 0):
+        agent.run_daily(at=SUN_0730)
+    assert not agent.daily_due(at=SUN_0730 + timedelta(hours=3))  # once that Sunday
+    assert agent.daily_due(at=SUN_0730 + timedelta(days=7))       # and again next Sunday
+
+
+def test_follow_ups_still_checked_daily_when_matching_is_weekly(seeded):
+    agent, jobs, _ = seeded
+    weekly(agent)
+    job_id = jobs[0]["id"]
+    agent.handle(callback(f"approve:{job_id}"))
+    agent.handle(callback(f"applied:{job_id}"))
+    agent.store.db.execute("UPDATE matches SET follow_up_at = ? WHERE job_id = ?",
+                           ((datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(), job_id))
+    assert agent.follow_ups_due(at=MON_0730) and not agent.daily_due(at=MON_0730)
+    assert agent.check_follow_ups(at=MON_0730) == 1
+    assert not agent.follow_ups_due(at=MON_0730 + timedelta(hours=1))
+
+
+def test_help_shows_schedule(agent):
+    weekly(agent)
+    agent.handle(message("/help"))
+    assert "every Sunday at 7am" in agent.tg.sent[-1]["text"]
+
+
+def test_bad_weekday_is_rejected(monkeypatch):
+    from agent.config import Settings
+    monkeypatch.setenv("RUN_WEEKDAY", "someday")
+    with pytest.raises(ValueError):
+        Settings()

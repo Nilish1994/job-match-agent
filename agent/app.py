@@ -23,7 +23,7 @@ VERDICT_ICON = {"strong": "🟢", "possible": "🟡", "stretch": "🟠", "no": "
 
 HELP = (
     "<b>Job match agent</b>\n"
-    "Every morning I score new Melbourne tech jobs against your profile and send the best matches.\n\n"
+    "On schedule ({schedule}) I score new Melbourne tech jobs against your profile and send the best matches.\n\n"
     "• <b>Approve</b> drafts a tailored cover letter\n"
     "• <b>Improve with full ad</b>: paste the whole advert for a sharper letter\n"
     "• Apply on the employer's site yourself, then tap <b>Applied</b>\n"
@@ -51,8 +51,28 @@ class Agent:
 
     # ---------------------------------------------------------------- daily run
     def daily_due(self, at: datetime | None = None) -> bool:
+        """True once per scheduled day, from DAILY_HOUR (local time) onwards."""
         local = (at or now()).astimezone(self.settings.timezone)
+        if self.settings.run_weekday is not None and local.weekday() != self.settings.run_weekday:
+            return False
         return local.hour >= self.settings.daily_hour and self.store.get_meta("last_daily_run") != local.date().isoformat()
+
+    def follow_ups_due(self, at: datetime | None = None) -> bool:
+        """Follow-up reminders are checked every day, even when matching runs weekly."""
+        local = (at or now()).astimezone(self.settings.timezone)
+        return local.hour >= self.settings.daily_hour and self.store.get_meta("last_follow_up_check") != local.date().isoformat()
+
+    def check_follow_ups(self, at: datetime | None = None) -> int:
+        local = (at or now()).astimezone(self.settings.timezone)
+        self.store.set_meta("last_follow_up_check", local.date().isoformat())
+        return self.send_follow_ups()
+
+    def schedule_text(self) -> str:
+        hour = f"{self.settings.daily_hour % 12 or 12}{'am' if self.settings.daily_hour < 12 else 'pm'}"
+        if self.settings.run_weekday is None:
+            return f"every day at {hour}"
+        from agent.config import WEEKDAYS
+        return f"every {WEEKDAYS[self.settings.run_weekday].title()} at {hour}"
 
     def run_daily(self, at: datetime | None = None) -> dict:
         local = (at or now()).astimezone(self.settings.timezone)
@@ -62,7 +82,7 @@ class Agent:
         to_score = prefilter.select(fresh, self.matcher.profile, self.settings.max_scored_per_run)
         scored, problem = self.score(to_score)
         sent = self.send_digest(fetched=fetched, scored=scored, problem=problem)
-        reminders = self.send_follow_ups()
+        reminders = self.check_follow_ups(at)
         summary = {"fetched": fetched, "candidates": len(to_score), "scored": scored, "sent": sent,
                    "follow_ups": reminders, "problem": problem}
         log.info("daily run %s", summary)
@@ -216,7 +236,7 @@ class Agent:
             return
         command = text.split()[0].split("@")[0].lower() if text else ""
         if command in ("/start", "/help"):
-            self.tg.send(chat_id, HELP)
+            self.tg.send(chat_id, HELP.format(schedule=self.schedule_text()))
         elif command == "/run":
             self.tg.send(chat_id, "Matching now. This takes a minute or two.")
             self.run_daily()

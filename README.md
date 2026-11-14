@@ -4,7 +4,7 @@
 
 **An AI job-search assistant that does the searching, screening and writing, and leaves the decisions to you.**
 
-Every morning it pulls new Melbourne tech jobs, has Claude score each one against your profile, and sends the best
+On a schedule you choose (daily, or weekly, e.g. Sundays at 7am) it pulls new Melbourne tech jobs, has Claude score each one against your profile, and sends the best
 matches to Telegram. Tap **Approve** and it sends a one-tap application kit: a CV PDF and a cover-letter PDF
 tailored to that job, plus paste-ready answers to the usual screening questions. You apply on the employer's site
 and tap **Applied**. A week later it asks how it went and keeps the
@@ -65,7 +65,8 @@ Requires the melbourne-tech-jobs stack running on the same Docker host, a Claude
    ```
 3. **Pair your chat:** message your bot. It replies with your chat id. Put that in `TELEGRAM_CHAT_ID` and run
    `docker compose up -d`.
-4. **Try it:** send `/run` to match now. After that, it runs daily at `DAILY_HOUR`, 8am Melbourne time by default.
+4. **Try it:** send `/run` to match now. After that, it runs at `DAILY_HOUR` (8am Melbourne time by default),
+   every day or, with `RUN_WEEKDAY=sunday`, weekly. Follow-up reminders are checked daily either way.
 
 **Cost:** about 100 new jobs a day, scored in batches of 8, plus a few letters comes to roughly $1–2 a day with
 Claude Opus 5.5. You can set `SCORE_MODEL=claude-haiku-5-5` for much cheaper screening.

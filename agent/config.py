@@ -4,6 +4,19 @@ import os
 from zoneinfo import ZoneInfo
 
 
+WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+
+
+def _weekday() -> int | None:
+    """RUN_WEEKDAY=sunday runs weekly on that day; empty means every day."""
+    value = os.environ.get("RUN_WEEKDAY", "").strip().lower()
+    if not value:
+        return None
+    if value not in WEEKDAYS:
+        raise ValueError(f"RUN_WEEKDAY must be one of {', '.join(WEEKDAYS)}")
+    return WEEKDAYS.index(value)
+
+
 def _int(name: str, default: int) -> int:
     value = os.environ.get(name, "").strip()
     return int(value) if value else default
@@ -21,6 +34,7 @@ class Settings:
     draft_model: str = field(default_factory=lambda: os.environ.get("DRAFT_MODEL", "claude-opus-5-5"))
     timezone: ZoneInfo = field(default_factory=lambda: ZoneInfo(os.environ.get("TIMEZONE", "Australia/Melbourne")))
     daily_hour: int = field(default_factory=lambda: _int("DAILY_HOUR", 8))
+    run_weekday: int | None = field(default_factory=_weekday)  # 0 = Monday ... 6 = Sunday
     min_score: int = field(default_factory=lambda: _int("MIN_SCORE", 70))
     max_digest: int = field(default_factory=lambda: _int("MAX_DIGEST", 5))
     score_batch: int = field(default_factory=lambda: _int("SCORE_BATCH", 8))

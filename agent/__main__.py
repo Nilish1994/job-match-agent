@@ -36,6 +36,8 @@ def serve(agent: Agent) -> None:
         try:
             if agent.chat and agent.daily_due():
                 agent.run_daily()
+            elif agent.chat and agent.follow_ups_due():
+                agent.check_follow_ups()
             for update in agent.tg.updates(offset, wait=25):
                 offset = update["update_id"] + 1
                 agent.store.set_meta("telegram_offset", offset)
