@@ -184,6 +184,7 @@ class Agent:
         text = (message.get("text") or "").strip()
         if not self.chat:
             # Setup mode: tell the owner which id to configure. Nothing else works yet.
+            log.info("setup mode: message from chat id %s", chat_id)
             self.tg.send(chat_id, f"Setup: your chat id is <code>{esc(chat_id)}</code>. "
                                   "Set TELEGRAM_CHAT_ID to it in .env and restart the agent.")
             return
