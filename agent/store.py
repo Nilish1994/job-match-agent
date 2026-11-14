@@ -108,13 +108,28 @@ class Store:
         return _match(row) if row else None
 
     def digest_candidates(self, min_score: int, limit: int) -> list[dict]:
+        """Best unsent matches, one per (title, company): job boards often re-list the same role.
+
+        Re-listings of a role already sent (or decided on) are marked skipped so they never resurface.
+        """
         rows = self.db.execute(
             """SELECT m.*, j.title, j.company, j.location, j.salary_min, j.salary_max, j.url, j.posted_at
                FROM matches m JOIN jobs j ON j.id = m.job_id
                WHERE m.status = 'scored' AND m.score >= ? AND m.verdict != 'no'
-               ORDER BY m.score DESC, COALESCE(j.posted_at, j.first_seen_at) DESC LIMIT ?""",
-            (min_score, limit)).fetchall()
-        return [_match(row) for row in rows]
+               ORDER BY m.score DESC, COALESCE(j.posted_at, j.first_seen_at) DESC""", (min_score,)).fetchall()
+        handled = {(r["t"], r["c"]) for r in self.db.execute(
+            """SELECT lower(trim(j.title)) AS t, lower(trim(COALESCE(j.company, ''))) AS c
+               FROM matches m JOIN jobs j ON j.id = m.job_id WHERE m.status != 'scored'""")}
+        picked = []
+        for row in rows:
+            key = (row["title"].strip().lower(), (row["company"] or "").strip().lower())
+            if key in handled:
+                self.set_status(row["job_id"], "skipped")
+                continue
+            handled.add(key)
+            if len(picked) < limit:
+                picked.append(_match(row))
+        return picked
 
     def set_status(self, job_id: str, status: str, **fields) -> None:
         if status not in STATUSES:

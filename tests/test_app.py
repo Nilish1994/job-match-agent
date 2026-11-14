@@ -47,6 +47,25 @@ def test_daily_run_sends_only_matches_above_threshold(seeded):
     assert not agent.daily_due(at=MELB_9AM + timedelta(hours=2))  # once per day
 
 
+def test_relisted_jobs_are_sent_once(agent):
+    jobs = [make_job(1, title="Full Stack Developer"), make_job(2, title="Full Stack Developer "),
+            make_job(3, title="AI Engineer")]
+    jobs[1]["company_name"] = jobs[0]["company_name"]  # same role, listed twice
+    with patch.object(feed, "sync", side_effect=lambda store, url, http: store.save_jobs(jobs)):
+        summary = agent.run_daily(at=MELB_9AM)
+    assert summary["sent"] == 2
+    statuses = sorted(agent.store.match(j["id"])["status"] for j in jobs)
+    assert statuses == ["sent", "sent", "skipped"]
+    # A later re-listing of a role already sent is skipped too.
+    later = make_job(4, title="AI Engineer")
+    later["company_name"] = jobs[2]["company_name"]
+    agent.store.save_jobs([later])
+    agent.store.save_score(later["id"], JobScore(job_id=later["id"], score=95, verdict="strong", reasons=[],
+                                                 gaps=[], red_flags=[]), "m")
+    assert agent.store.digest_candidates(70, 5) == []
+    assert agent.store.match(later["id"])["status"] == "skipped"
+
+
 def test_daily_due_waits_for_the_hour(agent):
     assert not agent.daily_due(at=datetime(2026, 11, 16, 19, 0, tzinfo=timezone.utc))  # 6am Melbourne
     assert agent.daily_due(at=MELB_9AM)
