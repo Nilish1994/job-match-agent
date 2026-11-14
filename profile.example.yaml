@@ -1,0 +1,33 @@
+# Copy to data/profile.yaml and describe yourself. This file stays on your server (data/ is git-ignored).
+name: Alex Example
+headline: Full-Stack Software Engineer | React, TypeScript | Python, FastAPI | Melbourne
+summary: >
+  Full-stack engineer with three years of commercial React experience and recent Python/FastAPI and
+  AI projects. Enjoys practical, user-focused engineering.
+contact:
+  email: alex@example.com
+  github: https://github.com/example
+  linkedin: https://www.linkedin.com/in/example
+experience:
+  - title: Software Engineer
+    company: Example Software
+    dates: 2021 - 2024
+    points:
+      - Built React and React Native features across SaaS products
+      - Managed application state with Redux
+education:
+  - Master of Information Technology, Example University (2025)
+skills: [React, TypeScript, JavaScript, Python, FastAPI, PostgreSQL, Docker, Next.js, LLMs, RAG]
+projects:
+  - name: example-dashboard
+    url: https://github.com/example/example-dashboard
+    summary: Data pipeline and Next.js dashboard deployed with Docker and nginx
+preferences:
+  roles: [Software Engineer, Full-Stack Developer, Frontend Developer (React), AI Engineer]
+  locations: [Melbourne (on-site or hybrid), Remote within Australia]
+  min_salary: 90000
+  work_rights: Full working rights in Australia, no sponsorship required
+  notice: 2 weeks
+  # Jobs whose title contains any of these are never scored.
+  avoid_title_words: [Principal, Head of, Director, Manager, Sales, Recruiter]
+  notes: Prefers product companies; open to contract roles.

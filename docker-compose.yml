@@ -1,0 +1,16 @@
+name: job-match-agent
+services:
+  agent:
+    build: .
+    env_file: .env
+    volumes:
+      - ./data:/data          # profile.yaml (yours) and agent.db (state)
+    networks: [jobs, outbound]
+    restart: unless-stopped
+
+networks:
+  # The melbourne-tech-jobs stack's internal network, where its API answers at http://api:8000.
+  jobs:
+    name: melbourne-tech-jobs_app
+    external: true
+  outbound: {}               # Telegram and the Claude API
