@@ -31,7 +31,10 @@ PRIVACY = (
     "JobPilot is a free beta. Matching covers IT jobs in Melbourne from Adzuna."
 )
 INVITE_ONLY = ("👋 <b>JobPilot</b> is an AI job-search copilot for Australian tech roles, "
-               "currently in an invite-only beta.")
+               "currently in an invite-only beta.\n\n"
+               "Invites are personal: you'll need an invite link to start. "
+               "To ask for one, see jobpilot.imisstech.com.au.")
+REQUESTS_CLOSED = "Invites are personal now. See jobpilot.imisstech.com.au to ask for one."
 FIRST_RUN_LIMIT = 60
 
 
@@ -204,18 +207,19 @@ class Bot:
                 self.tg.send(chat_id, f"Welcome{', ' + esc(name) if name else ''}! 🎉\n\n{PRIVACY}",
                              [[button("✅ I agree", "consent:yes"), button("No thanks", "consent:no")]])
                 return
-            self.tg.send(chat_id, "That invite link isn't valid or has already been used.",
-                         [[button("🙋 Request an invite", "req:new")]])
+            self.tg.send(chat_id, "That invite link isn't valid or has already been used. "
+                                  "Ask whoever sent it for a new one.")
             return
-        self.tg.send(chat_id, INVITE_ONLY, [[button("🙋 Request an invite", "req:new")]])
+        self.tg.send(chat_id, INVITE_ONLY)
 
     # ------------------------------------------------------------------ buttons
     def on_button(self, chat_id: str, query: dict) -> None:
         data = query.get("data", "")
         prefix = data.split(":", 1)[0]
         message_id = query.get("message", {}).get("message_id")
-        if prefix == "req":
-            return self.on_request(chat_id, query)
+        if prefix == "req":  # "Request an invite" buttons left in older chats: requests are closed
+            self._clear(chat_id, message_id)
+            return self.tg.answer(query["id"], REQUESTS_CLOSED)
         if prefix == "adm":
             if chat_id != self.owner:
                 return self.tg.answer(query["id"])
@@ -239,20 +243,6 @@ class Bot:
         if user["status"] in ("active", "paused"):
             return self.agent_for(user).on_button(query)
         self.tg.answer(query["id"], "Please finish setting up first.")
-
-    def on_request(self, chat_id: str, query: dict) -> None:
-        name = (query.get("from") or {}).get("first_name")
-        username = (query.get("from") or {}).get("username")
-        if self.store.user_by_chat(chat_id):
-            return self.tg.answer(query["id"], "You're already in!")
-        if not self.store.request_invite(chat_id, name):
-            return self.tg.answer(query["id"], "Your request is already with us.")
-        self.tg.answer(query["id"], "Request sent")
-        self.tg.send(chat_id, "🙋 Thanks! I've passed your request on. You'll get a message here if you're invited.")
-        if self.owner:
-            who = esc(name or "Someone") + (f" (@{esc(username)})" if username else "")
-            self.tg.send(self.owner, f"🙋 Invite request from {who}.",
-                         [[button("✅ Approve", f"adm:ok:{chat_id}"), button("✖️ Decline", f"adm:no:{chat_id}")]])
 
     def on_admin_button(self, query: dict, data: str) -> None:
         _, action, chat_id = data.split(":", 2)
