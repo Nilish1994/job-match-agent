@@ -50,6 +50,9 @@ def serve(agent: Agent) -> None:
 
 def main(argv: list[str]) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    # httpx logs every request URL at INFO, and Telegram URLs contain the bot token.
+    for noisy in ("httpx", "httpcore"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     command = argv[0] if argv else "serve"
     settings = Settings()
     if command == "check":
