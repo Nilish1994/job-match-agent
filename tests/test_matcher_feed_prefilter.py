@@ -74,3 +74,13 @@ def test_prefilter(profile):
     ranked = prefilter.select([make_job(5, skills=("Python",)), make_job(6, skills=("Python", "FastAPI", "Docker"))],
                               profile, limit=1)
     assert ranked[0]["id"].endswith("6")
+
+
+def test_prefilter_drops_adverts_with_avoided_phrases(profile):
+    profile.preferences.avoid_description_phrases = ["Australian citizen", "security clearance"]
+    clearance = make_job(7, title="Python Developer", description="Must hold a Baseline Security Clearance.")
+    citizen = make_job(8, title="React Developer", description="Applicants must be an Australian Citizen.")
+    fine = make_job(9, title="React Developer", description="Visa sponsorship available.")
+    assert not prefilter.wanted(clearance, profile)
+    assert not prefilter.wanted(citizen, profile)
+    assert prefilter.wanted(fine, profile)

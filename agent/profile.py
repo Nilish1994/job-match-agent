@@ -13,6 +13,9 @@ class Preferences:
     work_rights: str = ""
     notice: str = ""
     avoid_title_words: list[str] = field(default_factory=list)
+    # Adverts whose text contains any of these (case-insensitive) are never scored,
+    # e.g. "Australian citizen" or "security clearance" for a visa holder.
+    avoid_description_phrases: list[str] = field(default_factory=list)
     notes: str = ""
 
 

@@ -18,6 +18,9 @@ def wanted(job: dict, profile: Profile) -> bool:
     lowered = title.lower()
     if any(word.lower() in lowered for word in profile.preferences.avoid_title_words):
         return False
+    text = f"{title}\n{job.get('description') or ''}".lower()
+    if any(phrase.lower() in text for phrase in profile.preferences.avoid_description_phrases):
+        return False
     return bool(ROLE_WORDS.search(title)) or bool(set(job.get("skills", [])) & set(profile.skills))
 
 

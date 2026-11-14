@@ -30,4 +30,6 @@ preferences:
   notice: 2 weeks
   # Jobs whose title contains any of these are never scored.
   avoid_title_words: [Principal, Head of, Director, Manager, Sales, Recruiter]
+  # Adverts containing any of these phrases are never scored (useful for visa holders).
+  avoid_description_phrases: [security clearance, baseline clearance, NV1]
   notes: Prefers product companies; open to contract roles.
