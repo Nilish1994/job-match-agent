@@ -8,6 +8,8 @@ The public page for the JobPilot beta: static files, no build step.
 | `privacy.html` | Plain-language privacy page in the same style. |
 | `assets/sample-cv.png` | Sample CV rendered by `agent/documents.py` from the fictional `profile.example.yaml`. |
 | `tools/sample_cv.py` | Regenerates `assets/sample-cv.png`. Not served (see the nginx block). |
+| `assets/og-image.png` | 1200×630 link-preview image (`og:image`) used by both pages. |
+| `tools/og-image.html`, `tools/og_image.sh` | Source for `assets/og-image.png` and the headless-Chrome script that renders it. Not served. |
 
 ## Renaming the bot
 
@@ -36,6 +38,18 @@ python site/tools/sample_cv.py
 ```
 
 It only ever uses `profile.example.yaml` ("Alex Example"). Never point it at a real profile.
+
+## Regenerate the link-preview image
+
+Edit `site/tools/og-image.html` (a fixed 1200×630 page), then from the repo root:
+
+```bash
+./site/tools/og_image.sh
+```
+
+It uses headless Google Chrome (set `CHROME=/path/to/chrome` if it isn't at the macOS default path). After
+deploying, re-scrape the URL in a link-preview debugger such as LinkedIn's Post Inspector, because platforms cache
+previews.
 
 ## Serving with nginx
 
