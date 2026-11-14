@@ -1,0 +1,477 @@
+<!doctype html>
+<!-- The Telegram bot username lives ONLY in data-bot below (also in privacy.html). Change it there to rename the bot. -->
+<html lang="en-AU" data-bot="job_agent_nilish_bot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JobPilot · AI job-search copilot for Australian tech roles</title>
+<meta name="description" content="JobPilot scores new Melbourne tech jobs against your CV every week, sends the best matches to Telegram, and drafts a tailored CV and cover letter when you approve. Free invite-only beta.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0d14" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="JobPilot · AI job-search copilot for Australian tech roles">
+<meta property="og:description" content="Weekly job matches in Telegram, and a tailored CV and cover letter when you tap Approve. Free invite-only beta.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jobpilot.imisstech.com.au/">
+<meta property="og:site_name" content="JobPilot">
+<meta property="og:image" content="https://jobpilot.imisstech.com.au/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="JobPilot: your AI job-search copilot for Australian tech roles, with an example Telegram match card.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M7 16.5 25 8l-4.5 17-5.2-5.3-3.3 3.1.4-5.1z' fill='white'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f7f8fc;
+  --bg-alt: #eef0f8;
+  --surface: #ffffff;
+  --surface-2: #f2f4fa;
+  --text: #11131a;
+  --muted: #4c5263;
+  --border: #dfe2ee;
+  --accent: #4338ca;
+  --accent-strong: #3730a3;
+  --accent-soft: #e8e7ff;
+  --on-accent: #ffffff;
+  --sky: #0284c7;
+  --good: #15803d;
+  --warn: #b45309;
+  --glow-1: rgba(99, 102, 241, .22);
+  --glow-2: rgba(14, 165, 233, .18);
+  --shadow: 0 1px 2px rgba(17, 19, 26, .06), 0 12px 32px -12px rgba(30, 27, 75, .22);
+  --tg-bg: #c9dcc3;
+  --tg-pattern: rgba(255, 255, 255, .28);
+  --tg-bubble: #ffffff;
+  --tg-text: #000000;
+  --tg-meta: #6d7b86;
+  --tg-btn: rgba(20, 45, 25, .55);
+  --tg-btn-text: #ffffff;
+  --tg-header: #ffffff;
+  --radius: 18px;
+  --gutter: 16px;
+  --max: 1120px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0d14;
+    --bg-alt: #10131d;
+    --surface: #151926;
+    --surface-2: #1b2031;
+    --text: #eef0f7;
+    --muted: #a6adc2;
+    --border: #262c40;
+    --accent: #a5b4fc;
+    --accent-strong: #c7d2fe;
+    --accent-soft: #232657;
+    --on-accent: #0b0d14;
+    --sky: #7dd3fc;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --glow-1: rgba(99, 102, 241, .28);
+    --glow-2: rgba(14, 165, 233, .16);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 16px 40px -16px rgba(0, 0, 0, .7);
+    --tg-bg: #0e1621;
+    --tg-pattern: rgba(255, 255, 255, .03);
+    --tg-bubble: #182533;
+    --tg-text: #f5f5f5;
+    --tg-meta: #7f91a4;
+    --tg-btn: rgba(43, 82, 120, .55);
+    --tg-btn-text: #ffffff;
+    --tg-header: #17212b;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent-strong); }
+:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; border-radius: 6px; }
+h1, h2, h3 { line-height: 1.15; letter-spacing: -.02em; margin: 0; }
+p { margin: 0; }
+code, kbd {
+  font: .9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: .05em .35em;
+}
+.wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; z-index: 10; }
+.skip:focus { left: 8px; }
+
+/* Header */
+.top { position: sticky; top: 0; z-index: 5; backdrop-filter: saturate(1.6) blur(12px); -webkit-backdrop-filter: saturate(1.6) blur(12px);
+  background: color-mix(in srgb, var(--bg) 78%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 750; font-size: 1.1rem; letter-spacing: -.01em; }
+.brand:hover { color: var(--text); }
+.logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #0ea5e9); display: grid; place-items: center; flex: none; }
+.logo svg { width: 18px; height: 18px; }
+.beta { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; }
+.nav { display: none; gap: 24px; font-size: .95rem; }
+.nav a { color: var(--muted); text-decoration: none; }
+.nav a:hover { color: var(--text); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 12px 22px; border-radius: 12px;
+  font-weight: 650; font-size: 1rem; text-decoration: none; border: 1px solid transparent; transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
+.btn svg { width: 20px; height: 20px; flex: none; }
+.btn-primary { background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 24px -10px var(--accent); }
+.btn-primary:hover { background: var(--accent-strong); color: var(--on-accent); transform: translateY(-1px); }
+.btn-ghost { color: var(--text); border-color: var(--border); background: var(--surface); }
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+.btn-sm { min-height: 38px; padding: 7px 14px; font-size: .9rem; border-radius: 10px; }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:hover { transform: none; } }
+
+/* Hero */
+.hero { position: relative; padding: 44px 0 56px; isolation: isolate; }
+.hero::before { content: ""; position: absolute; inset: -60px 0 0; z-index: -1;
+  background: radial-gradient(520px 320px at 12% 8%, var(--glow-1), transparent 70%), radial-gradient(520px 360px at 92% 40%, var(--glow-2), transparent 70%); }
+.hero-grid { display: grid; gap: 40px; align-items: center; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; font-weight: 600; color: var(--muted);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px 5px 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px color-mix(in srgb, var(--good) 22%, transparent); }
+.hero h1 { font-size: clamp(2.1rem, 8.4vw, 3.6rem); font-weight: 800; margin: 18px 0 16px; }
+.grad { background: linear-gradient(100deg, var(--accent), var(--sky)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lede { font-size: 1.12rem; color: var(--muted); max-width: 34em; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.cta-row .btn { flex: 1 1 100%; }
+.fine { margin-top: 16px; font-size: .88rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.fine span { display: inline-flex; align-items: center; gap: 6px; }
+.fine svg { width: 16px; height: 16px; color: var(--good); flex: none; }
+
+/* Telegram mock */
+.phone { width: 100%; max-width: 420px; margin: 0 auto; border-radius: 28px; background: var(--surface); border: 1px solid var(--border);
+  box-shadow: var(--shadow); padding: 8px; }
+.tg { border-radius: 21px; overflow: hidden; background: var(--tg-bg);
+  background-image: radial-gradient(var(--tg-pattern) 1.2px, transparent 1.3px); background-size: 16px 16px; }
+.tg-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--tg-header); color: var(--tg-text); }
+.tg-head .logo { width: 36px; height: 36px; border-radius: 50%; }
+.tg-head b { display: block; font-size: .95rem; line-height: 1.2; }
+.tg-head small { color: var(--tg-meta); font-size: .78rem; }
+.tg-body { padding: 14px 10px 12px; display: grid; gap: 6px; }
+.tg-day { justify-self: center; font-size: .75rem; font-weight: 600; color: #fff; background: rgba(0, 0, 0, .22); padding: 2px 10px; border-radius: 999px; margin-bottom: 4px; }
+.bubble { background: var(--tg-bubble); color: var(--tg-text); border-radius: 14px 14px 14px 4px; padding: 9px 12px 6px; font-size: .9rem; line-height: 1.45;
+  max-width: 100%; box-shadow: 0 1px 1px rgba(0, 0, 0, .12); overflow-wrap: anywhere; }
+.bubble p + p { margin-top: 2px; }
+.bubble .meta { color: var(--tg-meta); font-size: .82rem; margin-bottom: 4px; }
+.bubble time { display: block; text-align: right; color: var(--tg-meta); font-size: .7rem; margin-top: 2px; }
+.score { font-weight: 700; }
+.tg-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.tg-btn { background: var(--tg-btn); color: var(--tg-btn-text); border-radius: 10px; text-align: center; font-size: .84rem; font-weight: 600; padding: 8px 6px;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.tg-btn.wide { grid-column: 1 / -1; }
+.tg-btn.hit { outline: 2px solid #fff; outline-offset: -2px; }
+
+/* Sections */
+section { padding: 64px 0; }
+.alt { background: var(--bg-alt); border-block: 1px solid var(--border); }
+.kicker { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+.sec-head { max-width: 640px; margin-bottom: 32px; }
+.sec-head h2 { font-size: clamp(1.7rem, 5.6vw, 2.4rem); font-weight: 780; margin: 8px 0 12px; }
+.sec-head p { color: var(--muted); font-size: 1.05rem; }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; counter-reset: step; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.step { position: relative; counter-increment: step; }
+.step::before { content: counter(step); display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px;
+  background: linear-gradient(135deg, #6366f1, #0ea5e9); color: #fff; font-weight: 750; margin-bottom: 16px; }
+.step h3, .principle h3 { font-size: 1.15rem; margin-bottom: 8px; }
+.step p, .principle p { color: var(--muted); }
+.step .when { display: inline-block; margin-top: 14px; font-size: .82rem; font-weight: 600; color: var(--text); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; }
+
+/* Kit */
+.kit-grid { display: grid; gap: 32px; align-items: center; }
+.kit-list { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 14px; }
+.kit-list li { display: flex; gap: 14px; align-items: flex-start; }
+.file { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.file svg { width: 20px; height: 20px; }
+.kit-list b { display: block; }
+.kit-list span { color: var(--muted); font-size: .95rem; }
+.paper-stack { position: relative; max-width: 560px; width: 100%; margin: 0 auto; padding: 0 10px 18px 0; }
+.paper-stack::before { content: ""; position: absolute; inset: 14px 0 0 14px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border); transform: rotate(2.2deg); }
+.paper { position: relative; border-radius: 14px; overflow: hidden; background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow); margin: 0; }
+.paper figcaption { position: absolute; top: 12px; right: 12px; font-size: .74rem; font-weight: 700; color: #3730a3; background: #e8e7ff; border-radius: 999px; padding: 3px 10px; }
+.paper img { width: 100%; }
+.note { margin-top: 14px; font-size: .88rem; color: var(--muted); text-align: center; }
+
+/* Principles */
+.principles { display: grid; gap: 16px; }
+.principle .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 16px; }
+.principle .ico svg { width: 22px; height: 22px; }
+
+/* FAQ */
+.faq { display: grid; gap: 12px; max-width: 780px; }
+.faq details { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0 20px; }
+.faq summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 0; font-weight: 650; font-size: 1.04rem; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; flex: none; font-size: 1.4rem; line-height: 1; color: var(--accent); transition: transform .2s ease; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details > div { padding: 0 0 18px; color: var(--muted); }
+.faq details > div p + p { margin-top: 10px; }
+
+/* Final CTA */
+.final { text-align: center; padding-top: 0; }
+.final .card { padding: 40px 24px; background: linear-gradient(135deg, color-mix(in srgb, #6366f1 14%, var(--surface)), color-mix(in srgb, #0ea5e9 12%, var(--surface))); }
+.final h2 { font-size: clamp(1.6rem, 5.4vw, 2.2rem); margin-bottom: 12px; }
+.final p { color: var(--muted); max-width: 520px; margin: 0 auto 24px; }
+
+/* Footer */
+footer { padding: 36px 0 44px; border-top: 1px solid var(--border); color: var(--muted); font-size: .92rem; }
+footer .wrap { display: grid; gap: 18px; }
+.foot-links { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+.foot-links a { color: var(--muted); }
+.foot-links a:hover { color: var(--text); }
+
+@media (min-width: 640px) {
+  :root { --gutter: 24px; }
+  .cta-row .btn { flex: 0 0 auto; }
+  .steps, .principles { grid-template-columns: 1fr 1fr; }
+  .steps .step:last-child { grid-column: 1 / -1; }
+}
+@media (min-width: 960px) {
+  :root { --gutter: 32px; }
+  .nav { display: flex; }
+  .hero { padding: 72px 0 88px; }
+  .hero-grid { grid-template-columns: 1.08fr .92fr; gap: 56px; }
+  section { padding: 96px 0; }
+  .steps { grid-template-columns: repeat(3, 1fr); }
+  .steps .step:last-child { grid-column: auto; }
+  .kit-grid { grid-template-columns: .9fr 1.1fr; gap: 64px; }
+  .principles { grid-template-columns: repeat(4, 1fr); }
+  .final .card { padding: 64px 40px; }
+  footer .wrap { grid-template-columns: 1fr auto; align-items: center; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="JobPilot home">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M2.5 11.6 21 3.5l-4.6 17.2-5.3-5.4-3.4 3.2.4-5.2z"/></svg></span>
+      JobPilot <span class="beta">Beta</span>
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#kit">The kit</a>
+      <a href="#principles">Principles</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" data-invite href="#invite">Request an invite</a>
+  </div>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot" aria-hidden="true"></span>Free invite-only beta · Melbourne</span>
+        <h1>Your AI job-search copilot for <span class="grad">Australian tech roles</span></h1>
+        <p class="lede">Every week, the best-fit Melbourne tech jobs land in Telegram, and one tap gets you a tailored CV and cover letter.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" data-invite href="#invite">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.4 4.2 2.9 11.3c-1.3.5-1.2 1.3-.2 1.6l4.7 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.3-1.5zM9 14.1l9.1-5.7c.4-.3.8-.1.5.2l-7.8 7-.3 3.3z"/></svg>
+            Request an invite
+          </a>
+          <a class="btn btn-ghost" href="#how">See how it works</a>
+        </div>
+        <div class="fine">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>Free during beta</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>Never applies without you</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>Delete your data any time</span>
+        </div>
+      </div>
+
+      <figure class="phone" style="margin:0 auto" aria-label="Example JobPilot match card in Telegram, with Approve and Skip buttons">
+        <div class="tg">
+          <div class="tg-head">
+            <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M2.5 11.6 21 3.5l-4.6 17.2-5.3-5.4-3.4 3.2.4-5.2z"/></svg></span>
+            <div><b>JobPilot</b><small>bot</small></div>
+          </div>
+          <div class="tg-body">
+            <span class="tg-day">Sunday</span>
+            <div class="bubble">
+              <p><span aria-hidden="true">🟢</span> <span class="score">80/100</span> · <b>Mid Front End Developer</b></p>
+              <p class="meta">Example Health · Melbourne VIC · $115k–$130k</p>
+              <p>✅ 3 years of commercial React, the core of the role</p>
+              <p>✅ TypeScript and Next.js both listed in the advert</p>
+              <p>⚠️ Asks for GraphQL, which isn't in your profile</p>
+              <p>⚠️ Design-system experience is a nice-to-have</p>
+              <time>7:02</time>
+            </div>
+            <div class="tg-btns" aria-hidden="true">
+              <span class="tg-btn hit">✅ Approve &amp; draft</span>
+              <span class="tg-btn">✖️ Skip</span>
+              <span class="tg-btn wide">🔗 Open advert</span>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </div>
+
+  <section id="how" class="alt">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">How it works</span>
+        <h2>Three steps, about five minutes a week</h2>
+        <p>JobPilot does the reading, screening and drafting. The decisions, and the final click, stay with you.</p>
+      </div>
+      <ol class="steps">
+        <li class="card step">
+          <h3>Upload your CV</h3>
+          <p>Send your CV as a PDF to the JobPilot bot. Claude turns it into a profile you can check. The file itself isn't kept, and the profile is encrypted.</p>
+          <span class="when">Once, in 2 minutes</span>
+        </li>
+        <li class="card step">
+          <h3>Get weekly matches</h3>
+          <p>New Melbourne tech jobs are scored 0–100 against your profile. The best arrive in Telegram with the reasons they fit and the gaps to know about.</p>
+          <span class="when">Sundays at 7am</span>
+        </li>
+        <li class="card step">
+          <h3>Approve for a kit</h3>
+          <p>Tap <b>Approve</b> and get an application kit: a tailored CV, a cover letter and paste-ready screening answers. You apply on the employer's site.</p>
+          <span class="when">One tap per job</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="kit">
+    <div class="wrap kit-grid">
+      <div>
+        <div class="sec-head" style="margin-bottom:0">
+          <span class="kicker">The application kit</span>
+          <h2>Tailored to the job, built from your own profile</h2>
+          <p>Claude chooses what to lead with for each role. Every fact on the page comes from your profile, never from the model.</p>
+        </div>
+        <ul class="kit-list">
+          <li><span class="file" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>
+            <div><b>Tailored CV (PDF)</b><span>Summary, skill order and featured projects chosen for this job.</span></div></li>
+          <li><span class="file" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <div><b>Cover letter (PDF)</b><span>180–260 words, with anything it couldn't verify listed for you to check.</span></div></li>
+          <li><span class="file" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="3" width="13" height="13" rx="2"/><path d="M16 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h3"/></svg></span>
+            <div><b>Screening answers</b><span>Why this role, work rights, notice period and salary, ready to paste.</span></div></li>
+        </ul>
+      </div>
+      <div>
+        <div class="paper-stack">
+          <figure class="paper">
+            <a href="assets/sample-cv.png"><img src="assets/sample-cv.png" width="1191" height="842" loading="lazy" decoding="async"
+                 alt="Sample tailored CV for the fictional candidate Alex Example, with summary, skills, selected projects, experience, education and work rights sections."></a>
+            <figcaption>Sample CV</figcaption>
+          </figure>
+        </div>
+        <p class="note">Generated by JobPilot for a fictional example profile.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="principles" class="alt">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Principles</span>
+        <h2>Built to help you apply well, not apply everywhere</h2>
+      </div>
+      <div class="principles">
+        <div class="card principle">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a5 5 0 0 1 10 0v4"/><rect x="4" y="11" width="16" height="10" rx="2"/><path d="m9 16 2 2 4-4"/></svg></span>
+          <h3>You approve everything</h3>
+          <p>JobPilot never applies, sends emails or fills in forms for you. Nothing happens to a job until you tap Approve, and you submit it yourself.</p>
+        </div>
+        <div class="card principle">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+          <h3>Grounded in your profile</h3>
+          <p>It never invents experience. The CV is built only from your profile, and skills or projects that aren't in it are dropped before anything reaches an employer.</p>
+        </div>
+        <div class="card principle">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></svg></span>
+          <h3>Private and deletable</h3>
+          <p>Your CV file isn't stored and your profile is encrypted at rest. Send <code>/deleteme</code> and everything about you is removed.</p>
+        </div>
+        <div class="card principle">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16a3 3 0 0 1 6 0M15 10h3M15 13h3"/></svg></span>
+          <h3>Visa and work-rights aware</h3>
+          <p>Scoring flags citizenship, security-clearance and sponsorship requirements, and you can skip adverts that ask for them. Your work-rights statement goes in every kit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">FAQ</span>
+        <h2>Questions, answered</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>How much does it cost?</summary>
+          <div><p>Nothing. JobPilot is free during the beta. Places are invite-only while it's tested with a small group, so request an invite in Telegram and you'll hear back there.</p></div>
+        </details>
+        <details>
+          <summary>Which jobs does it cover?</summary>
+          <div><p>IT and software roles in Melbourne, sourced from Adzuna. More Australian cities are planned.</p></div>
+        </details>
+        <details>
+          <summary>What do you store about me?</summary>
+          <div>
+            <p>The profile Claude builds from your CV (encrypted at rest), your matches, the status of each application, usage records and your Telegram chat id. The CV file itself is not stored.</p>
+            <p>To score and draft, your profile text is sent to Anthropic's Claude API. Send <code>/deleteme</code> to remove everything. The <a href="privacy.html">privacy page</a> has the details.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Will it apply to jobs for me?</summary>
+          <div><p>No, by design. Job boards prohibit automated applications, and recruiters can spot a mass-applied one. JobPilot prepares a strong, tailored application. You check it and submit it yourself.</p></div>
+        </details>
+        <details>
+          <summary>Can it make things up on my CV?</summary>
+          <div><p>No. The model only chooses emphasis: the summary wording, which skills lead and which projects come first. Every fact comes from your own profile, and the cover letter lists anything it couldn't verify for you to check before sending.</p></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final" id="invite">
+    <div class="wrap">
+      <div class="card">
+        <h2>Spend your week on interviews, not job boards</h2>
+        <p>Request an invite in Telegram. When a place opens, you'll upload your CV and get your first matches the following Sunday.</p>
+        <a class="btn btn-primary" data-invite href="#invite">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.4 4.2 2.9 11.3c-1.3.5-1.2 1.3-.2 1.6l4.7 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.3-1.5zM9 14.1l9.1-5.7c.4-.3.8-.1.5.2l-7.8 7-.3 3.3z"/></svg>
+          Request an invite
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><a href="https://www.adzuna.com.au/" rel="noopener">Jobs by Adzuna</a> · Built by Nilish Aluthwatta</p>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/Nilish1994/job-match-agent" rel="noopener">GitHub</a>
+      <a data-bot-link href="#invite">Telegram bot</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+// Builds every Telegram link from the single data-bot attribute on <html>.
+(function () {
+  var bot = document.documentElement.dataset.bot;
+  document.querySelectorAll("[data-invite]").forEach(function (a) { a.href = "https://t.me/" + bot + "?start=request"; });
+  document.querySelectorAll("[data-bot-link]").forEach(function (a) { a.href = "https://t.me/" + bot; });
+})();
+</script>
+</body>
+</html>

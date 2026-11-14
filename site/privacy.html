@@ -1,0 +1,159 @@
+<!doctype html>
+<!-- The Telegram bot username lives in data-bot below (and in index.html). Change it there to rename the bot. -->
+<html lang="en-AU" data-bot="job_agent_nilish_bot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · JobPilot</title>
+<meta name="description" content="What JobPilot stores, what it doesn't, who processes it, and how to delete everything.">
+<meta property="og:title" content="Privacy · JobPilot">
+<meta property="og:description" content="What JobPilot stores, what it doesn't, who processes it, and how to delete everything.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jobpilot.imisstech.com.au/privacy.html">
+<meta property="og:site_name" content="JobPilot">
+<meta property="og:image" content="https://jobpilot.imisstech.com.au/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="JobPilot: your AI job-search copilot for Australian tech roles, with an example Telegram match card.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0d14" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M7 16.5 25 8l-4.5 17-5.2-5.3-3.3 3.1.4-5.1z' fill='white'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f7f8fc; --surface: #ffffff; --surface-2: #f2f4fa; --text: #11131a; --muted: #4c5263; --border: #dfe2ee;
+  --accent: #4338ca; --accent-strong: #3730a3; --accent-soft: #e8e7ff; --on-accent: #ffffff; --sky: #0284c7;
+  --good: #15803d; --bad: #b91c1c; --glow-1: rgba(99, 102, 241, .18); --gutter: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0d14; --surface: #151926; --surface-2: #1b2031; --text: #eef0f7; --muted: #a6adc2; --border: #262c40;
+    --accent: #a5b4fc; --accent-strong: #c7d2fe; --accent-soft: #232657; --on-accent: #0b0d14; --sky: #7dd3fc;
+    --good: #4ade80; --bad: #f87171; --glow-1: rgba(99, 102, 241, .22);
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden;
+  font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent-strong); }
+:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; border-radius: 6px; }
+h1, h2 { line-height: 1.2; letter-spacing: -.02em; }
+code { font: .9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: .05em .35em; }
+.wrap { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 var(--gutter); }
+.top { border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--bg) 85%, transparent); }
+.top .wrap { max-width: 1120px; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 750; font-size: 1.1rem; }
+.brand:hover { color: var(--text); }
+.logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #0ea5e9); display: grid; place-items: center; }
+.logo svg { width: 18px; height: 18px; }
+.back { font-size: .95rem; color: var(--muted); text-decoration: none; }
+.back:hover { color: var(--text); }
+header.page { padding: 48px 0 8px; background: radial-gradient(520px 260px at 10% 0%, var(--glow-1), transparent 70%); }
+.kicker { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+h1 { font-size: clamp(2rem, 7vw, 2.8rem); margin: 8px 0 12px; font-weight: 800; }
+.lede { color: var(--muted); font-size: 1.1rem; margin: 0; }
+main { padding-bottom: 64px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-top: 20px; }
+.card h2 { font-size: 1.25rem; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; }
+.card p { margin: 0 0 10px; color: var(--muted); }
+.card p:last-child { margin-bottom: 0; }
+.card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.card li { position: relative; padding-left: 28px; color: var(--muted); }
+.card li b { color: var(--text); }
+.yes li::before, .no li::before { position: absolute; left: 0; top: 0; font-weight: 800; }
+.yes li::before { content: "✓"; color: var(--good); }
+.no li::before { content: "✕"; color: var(--bad); }
+.badge { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.updated { margin-top: 28px; font-size: .9rem; color: var(--muted); }
+footer { padding: 32px 0 44px; border-top: 1px solid var(--border); color: var(--muted); font-size: .92rem; }
+footer .wrap { max-width: 1120px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; }
+footer a { color: var(--muted); }
+footer a:hover { color: var(--text); }
+.foot-links { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+@media (min-width: 640px) { :root { --gutter: 24px; } .card { padding: 28px; } }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="JobPilot home">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M2.5 11.6 21 3.5l-4.6 17.2-5.3-5.4-3.4 3.2.4-5.2z"/></svg></span>
+      JobPilot
+    </a>
+    <a class="back" href="./">← Back to home</a>
+  </div>
+</div>
+
+<header class="page">
+  <div class="wrap">
+    <span class="kicker">Privacy</span>
+    <h1>Your data, in plain language</h1>
+    <p class="lede">JobPilot keeps only what it needs to find you jobs and draft applications, and you can delete all of it with one command.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="card yes" aria-labelledby="stored">
+      <h2 id="stored">What we store</h2>
+      <ul>
+        <li><b>Your profile</b>, which Claude extracts from your CV: your name and the contact details on your CV, experience, education, skills and projects, plus the job preferences you choose. It is <b>encrypted at rest</b>.</li>
+        <li><b>Your matches</b>: the jobs scored for you, with their scores, reasons and gaps.</li>
+        <li><b>Application statuses</b>: whether you approved, skipped or applied for a job, and how it went.</li>
+        <li><b>Your Telegram chat id</b>, so the bot knows where to send your matches. We don't see your phone number.</li>
+        <li><b>Usage records</b>: how much Claude processing your account used, to keep the beta within its budget.</li>
+        <li><b>Invite requests</b>: if you request an invite, your Telegram name and chat id are kept with the request.</li>
+      </ul>
+    </section>
+
+    <section class="card no" aria-labelledby="not-stored">
+      <h2 id="not-stored">What we don't store</h2>
+      <ul>
+        <li><b>Your CV file.</b> It's read once to build your profile and then discarded.</li>
+        <li><b>Passwords, payment details or job-site logins.</b> JobPilot never applies to jobs for you.</li>
+        <li>We never sell your data, show you ads or share your details with employers or recruiters. Nothing is sent to an employer unless you send it yourself.</li>
+      </ul>
+    </section>
+
+    <section class="card" aria-labelledby="claude">
+      <h2 id="claude">Who else sees it <span class="badge">Claude API</span></h2>
+      <p>To build your profile, score jobs and draft your CV, cover letter and answers, your CV text and profile are sent to <a href="https://www.anthropic.com/" rel="noopener">Anthropic's Claude API</a>. Anthropic processes them to return a response, under its <a href="https://www.anthropic.com/legal/commercial-terms" rel="noopener">commercial terms</a>, which say it doesn't train models on API data by default.</p>
+      <p>Messages and files travel through Telegram, under <a href="https://telegram.org/privacy" rel="noopener">Telegram's privacy policy</a>. Job listings come from <a href="https://www.adzuna.com.au/" rel="noopener">Adzuna</a>; none of your data is sent to Adzuna.</p>
+    </section>
+
+    <section class="card" aria-labelledby="delete">
+      <h2 id="delete">Seeing and deleting your data</h2>
+      <p>Send <code>/profile</code> to see what's stored about you, <code>/cv</code> or <code>/prefs</code> to update it, and <code>/pause</code> to stop matching for a while.</p>
+      <p>Send <code>/deleteme</code> at any time to remove everything about you: your profile, matches, application statuses, usage records and chat id. It can't be undone, and you're welcome to request a new invite later.</p>
+    </section>
+
+    <section class="card" aria-labelledby="contact">
+      <h2 id="contact">Questions</h2>
+      <p>Message the <a data-bot-link href="./">JobPilot bot on Telegram</a>, or open an issue on <a href="https://github.com/Nilish1994/job-match-agent/issues" rel="noopener">GitHub</a>.</p>
+    </section>
+
+    <p class="updated">JobPilot is a free, invite-only beta. This page will be updated if anything here changes. Last updated November 2026.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><a href="https://www.adzuna.com.au/" rel="noopener">Jobs by Adzuna</a> · Built by Nilish Aluthwatta</span>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="./">Home</a>
+      <a href="https://github.com/Nilish1994/job-match-agent" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var bot = document.documentElement.dataset.bot;
+  document.querySelectorAll("[data-bot-link]").forEach(function (a) { a.href = "https://t.me/" + bot; });
+})();
+</script>
+</body>
+</html>
