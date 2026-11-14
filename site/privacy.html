@@ -100,10 +100,12 @@ footer a:hover { color: var(--text); }
     <section class="card yes" aria-labelledby="stored">
       <h2 id="stored">What we store</h2>
       <ul>
-        <li><b>Your profile</b>, which Claude extracts from your CV: your experience, skills, projects, education and job preferences. It is <b>encrypted at rest</b>.</li>
+        <li><b>Your profile</b>, which Claude extracts from your CV: your name and the contact details on your CV, experience, education, skills and projects, plus the job preferences you choose. It is <b>encrypted at rest</b>.</li>
         <li><b>Your matches</b>: the jobs scored for you, with their scores, reasons and gaps.</li>
         <li><b>Application statuses</b>: whether you approved, skipped or applied for a job, and how it went.</li>
         <li><b>Your Telegram chat id</b>, so the bot knows where to send your matches. We don't see your phone number.</li>
+        <li><b>Usage records</b>: how much Claude processing your account used, to keep the beta within its budget.</li>
+        <li><b>Invite requests</b>: if you request an invite, your Telegram name and chat id are kept with the request.</li>
       </ul>
     </section>
 
@@ -111,6 +113,7 @@ footer a:hover { color: var(--text); }
       <h2 id="not-stored">What we don't store</h2>
       <ul>
         <li><b>Your CV file.</b> It's read once to build your profile and then discarded.</li>
+        <li><b>Passwords, payment details or job-site logins.</b> JobPilot never applies to jobs for you.</li>
         <li>We never sell your data, show you ads or share your details with employers or recruiters. Nothing is sent to an employer unless you send it yourself.</li>
       </ul>
     </section>
@@ -122,13 +125,14 @@ footer a:hover { color: var(--text); }
     </section>
 
     <section class="card" aria-labelledby="delete">
-      <h2 id="delete">Deleting your data</h2>
-      <p>Send <code>/deleteme</code> to the bot at any time. It removes everything about you: your profile, matches, application statuses and chat id. It can't be undone, and you're welcome to request a new invite later.</p>
+      <h2 id="delete">Seeing and deleting your data</h2>
+      <p>Send <code>/profile</code> to see what's stored about you, <code>/cv</code> or <code>/prefs</code> to update it, and <code>/pause</code> to stop matching for a while.</p>
+      <p>Send <code>/deleteme</code> at any time to remove everything about you: your profile, matches, application statuses, usage records and chat id. It can't be undone, and you're welcome to request a new invite later.</p>
     </section>
 
     <section class="card" aria-labelledby="contact">
       <h2 id="contact">Questions</h2>
-      <p>Message the <a data-bot-link href="./">JobPilot bot on Telegram</a> and you'll get a reply there.</p>
+      <p>Message the <a data-bot-link href="./">JobPilot bot on Telegram</a>, or open an issue on <a href="https://github.com/Nilish1994/job-match-agent/issues" rel="noopener">GitHub</a>.</p>
     </section>
 
     <p class="updated">JobPilot is a free, invite-only beta. This page will be updated if anything here changes. Last updated November 2026.</p>
