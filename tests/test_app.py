@@ -125,12 +125,6 @@ def test_other_chats_are_ignored(seeded):
     assert agent.store.match(jobs[0]["id"])["status"] == "sent"
 
 
-def test_setup_mode_replies_with_chat_id(agent):
-    agent.settings = type(agent.settings)(**{**agent.settings.__dict__, "telegram_chat_id": ""})
-    agent.handle(message("/start", chat_id="123"))
-    assert "123" in agent.tg.sent[-1]["text"] and agent.tg.sent[-1]["chat_id"] == "123"
-
-
 def test_rate_limit_while_scoring_is_reported_not_fatal(agent):
     response = httpx.Response(429, request=httpx.Request("POST", "https://api.anthropic.com"))
     def limited(**kwargs):

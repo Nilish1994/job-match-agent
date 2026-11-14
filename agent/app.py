@@ -1,7 +1,8 @@
-"""The agent: a daily matching run plus Telegram approval handlers.
+"""One user's agent: their matching run plus their Telegram approval handlers.
 
-Nothing is ever submitted to an employer. Approving a match drafts the
-application; the candidate applies on the employer's site and taps "Applied".
+`agent.bot.Bot` routes each chat to the right user's Agent. Nothing is ever
+submitted to an employer: approving a match drafts the application, the
+candidate applies on the employer's site and taps "Applied".
 """
 from datetime import datetime, timedelta
 import logging
@@ -12,7 +13,7 @@ import httpx
 from agent import documents, feed, prefilter
 from agent.config import Settings
 from agent.matcher import Matcher, Refused
-from agent.store import Store, now
+from agent.store import UserStore, now
 from agent.telegram import Telegram, TelegramError, button, esc
 
 log = logging.getLogger("agent")
@@ -22,13 +23,14 @@ PRICES = {"claude-opus-5-5": (4.0, 20.0), "claude-sonnet-5-5": (2.0, 10.0), "cla
 VERDICT_ICON = {"strong": "🟢", "possible": "🟡", "stretch": "🟠", "no": "⚪"}
 
 HELP = (
-    "<b>Job match agent</b>\n"
+    "<b>JobPilot</b>\n"
     "On schedule ({schedule}) I score new Melbourne tech jobs against your profile and send the best matches.\n\n"
-    "• <b>Approve</b> drafts a tailored cover letter\n"
+    "• <b>Approve</b> sends an application kit: tailored CV and cover letter PDFs plus paste-ready answers\n"
     "• <b>Improve with full ad</b>: paste the whole advert for a sharper letter\n"
     "• Apply on the employer's site yourself, then tap <b>Applied</b>\n"
     "• I'll check in a week later to record the outcome\n\n"
-    "/run: match now · /pending: applications in progress · /stats: pipeline and API cost"
+    "/run: match now · /pending: applications in progress · /stats: your pipeline\n"
+    "/profile · /cv: update your CV · /prefs: change preferences · /pause · /resume · /deleteme"
 )
 
 
@@ -42,12 +44,16 @@ def salary_text(job: dict) -> str:
 
 
 class Agent:
-    def __init__(self, settings: Settings, store: Store, telegram: Telegram, matcher: Matcher, http: httpx.Client):
+    def __init__(self, settings: Settings, store: UserStore, telegram: Telegram, matcher: Matcher, http: httpx.Client,
+                 chat_id: str, budget_ok=None):
         self.settings, self.store, self.tg, self.matcher, self.http = settings, store, telegram, matcher, http
+        self.chat_id = str(chat_id)
+        # Shared spending guard set by the Bot; None means no limit (tests, single user).
+        self.budget_ok = budget_ok or (lambda: True)
 
     @property
     def chat(self) -> str:
-        return self.settings.telegram_chat_id
+        return self.chat_id
 
     # ---------------------------------------------------------------- daily run
     def daily_due(self, at: datetime | None = None) -> bool:
@@ -77,20 +83,26 @@ class Agent:
     def run_daily(self, at: datetime | None = None) -> dict:
         local = (at or now()).astimezone(self.settings.timezone)
         self.store.set_meta("last_daily_run", local.date().isoformat())
-        fetched = feed.sync(self.store, self.settings.feed_url, self.http)
+        fetched = feed.sync(self.store.root, self.settings.feed_url, self.http)
+        return self.match(fetched=fetched, at=at)
+
+    def match(self, fetched: int, at: datetime | None = None, limit: int | None = None) -> dict:
+        """Score this user's unscored recent jobs and send their digest (the feed is synced by the caller)."""
         fresh = self.store.unscored_jobs(since=now() - timedelta(days=self.settings.max_job_age_days))
-        to_score = prefilter.select(fresh, self.matcher.profile, self.settings.max_scored_per_run)
+        to_score = prefilter.select(fresh, self.matcher.profile, limit or self.settings.max_scored_per_run)
         scored, problem = self.score(to_score)
         sent = self.send_digest(fetched=fetched, scored=scored, problem=problem)
         reminders = self.check_follow_ups(at)
         summary = {"fetched": fetched, "candidates": len(to_score), "scored": scored, "sent": sent,
                    "follow_ups": reminders, "problem": problem}
-        log.info("daily run %s", summary)
+        log.info("run for user %s: %s", self.store.user_id, summary)
         return summary
 
     def score(self, jobs: list[dict]) -> tuple[int, str | None]:
         scored, size = 0, self.settings.score_batch
         for start in range(0, len(jobs), size):
+            if not self.budget_ok():
+                return scored, "This week's matching budget is used up; the rest will be scored next run."
             batch = jobs[start:start + size]
             try:
                 results = self.matcher.score(batch)
@@ -164,6 +176,14 @@ class Agent:
         if not job:
             self.tg.send(self.chat, "I can't find that job any more.")
             return
+        today = (now().astimezone(self.settings.timezone)).replace(hour=0, minute=0, second=0, microsecond=0)
+        if self.store.drafts_since(today) >= self.settings.max_drafts_per_day:
+            self.tg.send(self.chat, f"You've reached today's limit of {self.settings.max_drafts_per_day} drafts. "
+                                    "Tap <b>Rewrite</b> tomorrow.", [[button("🔁 Rewrite", f"redo:{job_id}")]])
+            return
+        if not self.budget_ok():
+            self.tg.send(self.chat, "Drafting is paused for this week's budget. Please try again after Sunday.")
+            return
         try:
             result = self.matcher.letter(job, full_advert)
         except Refused:
@@ -204,7 +224,7 @@ class Agent:
         for question, answer in documents.screening_text(profile, result):
             lines += ["", f"<b>{esc(question)}</b>", f"<code>{esc(answer)}</code>"]
         if not profile.contact.get("email") or not profile.contact.get("phone"):
-            lines += ["", "ℹ️ Add your email and phone to profile.yaml so they appear on the CV."]
+            lines += ["", "ℹ️ Your CV has no email or phone yet. Send /cv with a CV that includes them."]
         lines += ["", "Open the advert, apply with the PDFs, then tap <b>Applied</b>."]
         self.tg.send(self.chat, "\n".join(lines), self.letter_buttons(job))
 
@@ -221,12 +241,6 @@ class Agent:
     def on_message(self, message: dict) -> None:
         chat_id = str(message.get("chat", {}).get("id", ""))
         text = (message.get("text") or "").strip()
-        if not self.chat:
-            # Setup mode: tell the owner which id to configure. Nothing else works yet.
-            log.info("setup mode: message from chat id %s", chat_id)
-            self.tg.send(chat_id, f"Setup: your chat id is <code>{esc(chat_id)}</code>. "
-                                  "Set TELEGRAM_CHAT_ID to it in .env and restart the agent.")
-            return
         if not self.authorised(chat_id):
             return
         waiting = self.store.pop_input(chat_id)
@@ -238,6 +252,12 @@ class Agent:
         if command in ("/start", "/help"):
             self.tg.send(chat_id, HELP.format(schedule=self.schedule_text()))
         elif command == "/run":
+            today = now().astimezone(self.settings.timezone).date().isoformat()
+            if self.store.get_meta("last_manual_run") == today:
+                self.tg.send(chat_id, "You've already run a match today. Your next one is automatic "
+                                      f"({self.schedule_text()}).")
+                return
+            self.store.set_meta("last_manual_run", today)
             self.tg.send(chat_id, "Matching now. This takes a minute or two.")
             self.run_daily()
         elif command == "/pending":

@@ -52,6 +52,23 @@ class Telegram:
     def answer(self, callback_id: str, text: str = "") -> None:
         self._call("answerCallbackQuery", callback_query_id=callback_id, text=text[:200])
 
+    def get_me(self) -> dict:
+        return self._call("getMe")
+
+    def download(self, file_id: str, max_bytes: int) -> bytes:
+        """Fetch a file the user sent. Size is checked before and after downloading."""
+        info = self._call("getFile", file_id=file_id)
+        if (info.get("file_size") or 0) > max_bytes:
+            raise TelegramError("file too large")
+        response = self.client.get(f"{self.base.replace('/bot', '/file/bot', 1)}/{info['file_path']}", timeout=60)
+        if response.status_code != 200 or len(response.content) > max_bytes:
+            raise TelegramError(f"download failed: HTTP {response.status_code}")
+        return response.content
+
+    def edit_text(self, chat_id: str, message_id: int, text: str, buttons: list[list[dict]] | None = None) -> None:
+        self._call("editMessageText", chat_id=chat_id, message_id=message_id, text=text[:4096], parse_mode="HTML",
+                   disable_web_page_preview=True, reply_markup={"inline_keyboard": buttons} if buttons else None)
+
     def send_document(self, chat_id: str, filename: str, content: bytes, caption: str = "",
                       mime: str = "application/pdf") -> None:
         self._call("sendDocument", http_timeout=60, files={"document": (filename, content, mime)},

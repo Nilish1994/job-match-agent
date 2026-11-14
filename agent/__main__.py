@@ -1,48 +1,51 @@
 """Entry point.
 
-    python -m agent serve   # long-poll Telegram and run the daily match at DAILY_HOUR
-    python -m agent run     # one matching run now (sends the digest)
-    python -m agent check   # validate config and profile without calling any API
+    python -m agent serve   # long-poll Telegram; weekly matching for every active user; daily follow-ups
+    python -m agent run     # one matching run for every active user, now
+    python -m agent check   # validate configuration without calling Claude or Telegram
 """
 import logging
+import os
 import sys
 import time
 
 import anthropic
 import httpx
 
-from agent.app import Agent
+from agent.bot import Bot
 from agent.config import Settings
-from agent.matcher import Matcher
 from agent.profile import Profile
 from agent.store import Store
 from agent.telegram import Telegram, TelegramError
+from agent.vault import Vault
 
 log = logging.getLogger("agent")
 
 
-def build(settings: Settings, http: httpx.Client) -> Agent:
-    store = Store(settings.db_path)
-    profile = Profile.load(settings.profile_path)
-    matcher = Matcher(anthropic.Anthropic(), profile, settings.score_model, settings.draft_model,
-                      usage_cb=store.record_usage)
-    return Agent(settings, store, Telegram(settings.telegram_token, http), matcher, http)
+def build(settings: Settings, http: httpx.Client, *, connect: bool = True) -> Bot:
+    store = Store(settings.db_path, owner_chat_id=settings.telegram_chat_id or None)
+    telegram = Telegram(settings.telegram_token, http)
+    username = telegram.get_me().get("username", "") if connect else ""
+    bot = Bot(settings, store, telegram, anthropic.Anthropic(), http, Vault(settings.data_key), bot_username=username)
+    bot.ensure_owner(settings.profile_path if os.path.exists(settings.profile_path) else None)
+    return bot
 
 
-def serve(agent: Agent) -> None:
-    offset = agent.store.get_meta("telegram_offset")
-    log.info("serving; chat configured: %s", bool(agent.chat))
+def serve(bot: Bot) -> None:
+    offset = bot.store.get_meta("telegram_offset")
+    log.info("serving as @%s; owner configured: %s; users: %d", bot.bot_username, bool(bot.owner),
+             len(bot.store.users()))
     while True:
         try:
-            if agent.chat and agent.daily_due():
-                agent.run_daily()
-            elif agent.chat and agent.follow_ups_due():
-                agent.check_follow_ups()
-            for update in agent.tg.updates(offset, wait=25):
+            if bot.owner and bot.weekly_due():
+                bot.run_weekly()
+            elif bot.owner and bot.follow_ups_due():
+                bot.check_follow_ups()
+            for update in bot.tg.updates(offset, wait=25):
                 offset = update["update_id"] + 1
-                agent.store.set_meta("telegram_offset", offset)
+                bot.store.set_meta("telegram_offset", offset)
                 try:
-                    agent.handle(update)
+                    bot.handle(update)
                 except Exception:  # one bad update must not stop the bot
                     log.exception("update %s failed", update.get("update_id"))
         except (httpx.HTTPError, TelegramError) as exc:
@@ -58,20 +61,20 @@ def main(argv: list[str]) -> int:
     command = argv[0] if argv else "serve"
     settings = Settings()
     if command == "check":
-        profile = Profile.load(settings.profile_path)
-        print(f"profile ok: {profile.name}, {len(profile.skills)} skills, {len(profile.projects)} projects")
-        print(f"telegram token set: {bool(settings.telegram_token)}; chat id set: {bool(settings.telegram_chat_id)}")
+        Vault(settings.data_key)  # raises if missing or malformed
+        if os.path.exists(settings.profile_path):
+            profile = Profile.load(settings.profile_path)
+            print(f"owner profile ok: {profile.name}, {len(profile.skills)} skills")
+        print(f"telegram token set: {bool(settings.telegram_token)}; owner chat set: {bool(settings.telegram_chat_id)}; "
+              f"data key ok; weekly budget ${settings.weekly_budget_usd:.2f}")
         return 0
     with httpx.Client(follow_redirects=False) as http:
-        agent = build(settings, http)
+        bot = build(settings, http)
         if command == "run":
-            if not agent.chat:
-                print("Set TELEGRAM_CHAT_ID first (message the bot to get it).", file=sys.stderr)
-                return 1
-            print(agent.run_daily())
+            print(bot.run_weekly())
             return 0
         if command == "serve":
-            serve(agent)
+            serve(bot)
             return 0
     print(__doc__, file=sys.stderr)
     return 2

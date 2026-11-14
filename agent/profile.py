@@ -1,5 +1,5 @@
 """The candidate profile the agent matches jobs against (YAML, kept out of git)."""
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 import yaml
@@ -35,7 +35,22 @@ class Profile:
 
     @classmethod
     def load(cls, path: str | Path) -> "Profile":
-        data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+        return cls.from_yaml(Path(path).read_text(encoding="utf-8"))
+
+    @classmethod
+    def from_yaml(cls, text: str) -> "Profile":
+        return cls.from_dict(yaml.safe_load(text) or {})
+
+    def to_yaml(self) -> str:
+        return yaml.safe_dump(self.to_dict(), sort_keys=False, allow_unicode=True)
+
+    def to_dict(self) -> dict:
+        return {"name": self.name, "headline": self.headline, "summary": self.summary, "contact": self.contact,
+                "experience": self.experience, "education": self.education, "skills": self.skills,
+                "projects": self.projects, "preferences": asdict(self.preferences), "screening": self.screening}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Profile":
         missing = [key for key in ("name", "headline", "summary") if not data.get(key)]
         if missing:
             raise ValueError(f"profile is missing: {', '.join(missing)}")

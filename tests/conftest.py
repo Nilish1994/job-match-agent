@@ -6,7 +6,7 @@ import pytest
 
 from agent.app import Agent
 from agent.config import Settings
-from agent.matcher import CoverLetter, JobScore, Matcher
+from agent.matcher import CoverLetter, CvProject, CvRole, JobScore, Matcher, ProfileDraft
 from agent.profile import Profile
 from agent.store import Store
 
@@ -51,6 +51,21 @@ class FakeTelegram:
     def updates(self, offset, wait=25):
         return []
 
+    def edit_text(self, chat_id, message_id, text, buttons=None):
+        self.sent.append({"chat_id": chat_id, "text": text, "buttons": buttons or [], "edited": message_id})
+
+    def get_me(self):
+        return {"username": "test_bot"}
+
+    def download(self, file_id, max_bytes):
+        return self.files[file_id]
+
+    files: dict = {}
+
+    def to(self, chat_id):
+        """Messages sent to one chat, oldest first."""
+        return [m for m in self.sent if str(m["chat_id"]) == str(chat_id)]
+
     def callbacks(self, message_index=-1):
         return [b["callback_data"] for row in self.sent[message_index]["buttons"] for b in row if "callback_data" in b]
 
@@ -58,8 +73,17 @@ class FakeTelegram:
 class FakeClaude:
     """Stands in for anthropic.Anthropic(); returns scripted parse results."""
 
-    def __init__(self, scorer=None, letter=None):
+    def __init__(self, scorer=None, letter=None, cv=None):
         self.calls = []
+        self.cv = cv or (lambda: ProfileDraft(
+            name="Sam Tester", headline="Full-Stack Developer | React, Python",
+            summary="Developer with four years building React and Python web apps.",
+            email="sam@example.com", phone="0400 111 222", location="Melbourne, VIC", linkedin="", github="",
+            experience=[CvRole(title="Developer", company="Acme", dates="2021 - 2025",
+                               points=["Built React dashboards", "Wrote FastAPI services"])],
+            education=["BSc Computer Science, Example University, 2020"],
+            skills=["React", "Python", "FastAPI", "PostgreSQL"],
+            projects=[CvProject(name="tasks-app", url="", summary="A to-do app")]))
         self.scorer = scorer or (lambda job_ids: [JobScore(job_id=j, score=80, verdict="possible",
                                                            reasons=["Python match"], gaps=[], red_flags=[])
                                                   for j in job_ids])
@@ -78,6 +102,8 @@ class FakeClaude:
             import re
             ids = re.findall(r'job_id="([^"]+)"', kwargs["messages"][0]["content"])
             parsed = kwargs["output_format"](results=self.scorer(ids))
+        elif kwargs["output_format"].__name__ == "ProfileDraft":
+            parsed = self.cv()
         else:
             parsed = self.letter()
         return SimpleNamespace(stop_reason="end_turn", parsed_output=parsed, usage=usage, model=kwargs["model"])
@@ -95,6 +121,14 @@ def claude():
 
 
 @pytest.fixture
-def agent(settings, store, profile, claude):
-    matcher = Matcher(claude, profile, "claude-opus-5-5", "claude-opus-5-5", usage_cb=store.record_usage)
-    return Agent(settings, store, FakeTelegram(), matcher, http=None)
+def owner(store):
+    user = store.create_user("42", "Alex Example")
+    store.update_user(user["id"], status="active")
+    return store.user(user["id"])
+
+
+@pytest.fixture
+def agent(settings, store, profile, claude, owner):
+    scoped = store.for_user(owner["id"])
+    matcher = Matcher(claude, profile, "claude-opus-5-5", "claude-opus-5-5", usage_cb=scoped.record_usage)
+    return Agent(settings, scoped, FakeTelegram(), matcher, http=None, chat_id="42")
